@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🔐 GitHub GPG Key Setup Script"
+echo "🔐 GitHub GPG Key Setup Script (with revocation cleanup)"
 
 # Step 1: Get user identity
 GIT_NAME=$(git config user.name)
@@ -28,8 +28,8 @@ Expire-Date: 0
 %commit
 EOF
 
-# Step 3: Find GPG key ID
-KEY_ID=$(gpg --list-secret-keys --keyid-format=long "$GIT_EMAIL" | awk '/sec/{print $2}' | awk -F'/' '{print $2}')
+# Step 3: Find the newly generated GPG key ID (latest matching key)
+KEY_ID=$(gpg --list-secret-keys --keyid-format=long "$GIT_EMAIL" | grep 'sec' | tail -n1 | awk '{print $2}' | cut -d'/' -f2)
 if [ -z "$KEY_ID" ]; then
   echo "❌ Could not find generated GPG key."
   exit 1
@@ -37,13 +37,37 @@ fi
 
 echo "🔑 GPG key ID: $KEY_ID"
 
-# Step 4: Configure Git to use GPG key
+# Step 4: Revoke and delete older GPG keys matching this email
+echo "🧹 Revoking and deleting older GPG keys..."
+ALL_KEY_IDS=$(gpg --list-secret-keys --keyid-format=long "$GIT_EMAIL" | grep 'sec' | awk '{print $2}' | cut -d'/' -f2)
+
+for ID in $ALL_KEY_IDS; do
+  if [ "$ID" != "$KEY_ID" ]; then
+    echo "❗ Revoking old key: $ID"
+
+    # Generate and import revocation certificate
+    REVOKE_FILE="/tmp/revoke-$ID.asc"
+    gpg --batch --yes --output "$REVOKE_FILE" --gen-revoke "$ID" <<EOF
+y
+0
+Superseded by new key $KEY_ID
+EOF
+    gpg --import "$REVOKE_FILE"
+    rm -f "$REVOKE_FILE"
+
+    echo "🗑️ Deleting old key: $ID"
+    gpg --batch --yes --delete-secret-keys "$ID" &>/dev/null
+    gpg --batch --yes --delete-keys "$ID" &>/dev/null
+  fi
+done
+
+# Step 5: Configure Git to use the new GPG key
 git config --global user.signingkey "$KEY_ID"
 git config --global commit.gpgsign true
 git config --global gpg.format gpg
 echo "✅ Git is now configured to sign commits with your GPG key."
 
-# Step 5: Export and copy the public key
+# Step 6: Export and copy the public key
 echo "📋 Copying public key to clipboard..."
 if command -v pbcopy &>/dev/null; then
   gpg --armor --export "$KEY_ID" | pbcopy
@@ -61,7 +85,7 @@ else
   echo
 fi
 
-# Step 6: Open GitHub GPG key page
+# Step 7: Open GitHub GPG key page
 echo "🌐 Opening GitHub GPG key upload page..."
 if command -v xdg-open &>/dev/null; then
   xdg-open "https://github.com/settings/keys"
@@ -72,7 +96,7 @@ else
   echo "https://github.com/settings/keys"
 fi
 
-# Step 7: Final message
+# Step 8: Final message
 echo
 echo "✅ GPG key setup completed. Paste your key in GitHub, then try:"
 echo "   git commit -S -m 'Signed commit'"
