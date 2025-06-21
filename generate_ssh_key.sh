@@ -7,7 +7,7 @@ echo "🔐 SSH Key Setup Script"
 
 # Step 1: Check for existing SSH key
 if [ -f "$KEY_PATH" ]; then
-    echo "⚠️  SSH key already exists at $KEY_PATH"
+    echo "⚠️ SSH key already exists at $KEY_PATH"
 
     read -p "Do you want to overwrite it and generate a new one? (y/n): " choice
     case "$choice" in 

@@ -6,7 +6,7 @@ COMMIT_MSG="${2:-'Initial commit or update from script'}"  # Optional commit mes
 TARGET_DIR="${3:-$(basename -s .git "$GITHUB_URL")}"  # Optional local folder name
 
 if [[ -z "$GITHUB_URL" ]]; then
-  echo "❌ Error: No GitHub URL provided."
+  echo "❌ Error: No GitHub URL provided here."
   echo "Usage: $0 <github_repo_url> [commit_message] [target_directory]"
   exit 1
 fi

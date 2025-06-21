@@ -38,7 +38,7 @@ fi
 
 # Step 7: Confirm config
 echo ""
-echo "📄 Your Git global configuration:"
+echo "📄 All Your Git global configuration:"
 git config --global --list
 
 echo "✅ Git config setup complete!"
