@@ -22,8 +22,8 @@ git init
 echo "🔗 Adding remote origin..."
 git remote add origin "$GITHUB_URL"
 
-echo "⬇️ Fetching from remote (if exists)..."
-git pull origin main --allow-unrelated-histories 2>/dev/null || echo "⚠️ Could not pull (maybe remote is empty or branch is missing)."
+echo "⬇️  Fetching from remote (if exists)..."
+git pull origin main --allow-unrelated-histories 2>/dev/null || echo "⚠️  Could not pull (maybe remote is empty or branch is missing)."
 
 echo "📦 Adding new files..."
 git add .
