@@ -98,7 +98,7 @@ if [ "$OLD_KEYS_FOUND" -eq 1 ]; then
                     rm -f "$REVOKE_FILE"
                     continue
                 fi
-                
+
                 if ! gpg --import "$REVOKE_FILE" &>/dev/null; then
                     echo "⚠️ Warning: Failed to import revocation certificate for ${ID}."
                 fi
